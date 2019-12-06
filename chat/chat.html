@@ -1,0 +1,59 @@
+<html>
+<head>
+<title>Auxilio en el sal&oacute;n de clases</title>
+</head>
+<style>
+.top {
+  clear: both;
+  width: 500px;
+}
+.scroll {
+  background: black;
+  color: white;
+  clear: both;
+  width: 500px;
+  min-height:100px;
+  max-height:300px;
+  height:auto !important;
+  height:300px;
+  overflow: auto;
+}
+.bottom {
+  clear: both;
+}
+</style>
+<body>
+<div class="top">
+<canvas id="semaforo" width="300" height="200" style="border:1px solid #000000;">
+</canvas>
+<p>
+<button id="mayor" onclick="javascript:cambio(5)">+</button>
+<button id="menor" onclick="javascript:cambio(-5)">-</button>
+</p>
+<p>
+<small>
+La luz verde le asegura a la profe que no tienes ninguna duda y que
+est&eacute;s avanzando bien. La luz amarilla significa que si ella va
+contigo, tendr&aacute;s algunas cosas que quieras aclarar con su ayuda,
+pero no urge. La luz roja significa que est&aacute;s atorado y
+necesitas la profe para poder seguirle. Pon este sem&aacute;foro en
+una ventana propia de tu navegador en una esquina superior de tu
+monitor as&iacute; que no se tape con otra ventanas. As&iacute; la
+profe sabe qu&eacute; onda contigo mientras ella anda dando vueltas
+dentro del sal&oacute;n ayudando a la gente (por poder echar un
+vistazo en tu monitor y concluir s&iacute; o no hace falta ir
+contigo.)</small>
+</p>
+</div>
+<div id="login"><p><button onclick="javascript:login()">Login</button></p></div>
+<div class="scroll" id="chat"></div>
+<div class="bottom">
+<p><span id="nick"></span> <input type="text" id="msg" size="50" value="" onkeydown="if (event.keyCode == 13) message()"></p>
+</div>
+<p>
+<small>Actualizado el 2 de septiembre, 2015.</small>
+</p>
+</body>
+<script src="chat.js"></script>
+</html>
+
