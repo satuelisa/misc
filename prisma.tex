@@ -1,0 +1,79 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage{pstricks-add}
+\begin{document}
+
+\pagestyle{empty}
+\thispagestyle{empty}
+
+\begin{center}
+\scalebox{0.9}{\begin{pspicture}(14,20)
+
+    \rput[Bl](3, 16){\shortstack[c]{Records identified through \\
+        database searching \\ ($n = ?$)}}
+
+    \rput[Bl](9, 16){\shortstack[c]{Additional records identified
+        \\ through other sources \\ ($n = ?$)}}
+    
+    \rput[Bl](6, 13){\shortstack[c]{Records after duplicates
+        removed \\ ($n = ?$)}}
+
+    \rput[Bl](6, 10){\shortstack[c]{Records screened \\ ($n = ?$)}}
+
+    \rput[Bl](11, 10){\shortstack[c]{Records excluded \\ ($n = ?$)}}
+
+    \rput[Bl](6, 7){\shortstack[c]{Full-text articles \\
+        assessed for elegibility \\ ($n = ?$)}}
+    
+    \rput[Bl](11, 7){\shortstack[c]{Full-text articles \\ excluded,
+        with reasons \\ ($n = ?$)}}
+
+    \rput[Bl](6, 4){\shortstack[c]{Studies included in \\
+        qualitative synthesis \\ ($n = ?$)}}
+
+    \rput[Bl](6, 0.7){\shortstack[c]{Studies included in \\
+        qualitatice synthesis \\ (meta-analysis) \\ ($n = ?$)}}
+
+    \psframe(2.5,15.5)(7.5,17.5)
+    \psframe(8.5,15.5)(14,17.5)
+
+    \psframe(5.5,12.5)(11.5,14.2)
+
+    \psframe(5.5,9.5)(9.2,11.2)
+    \psframe(10.6,9.5)(14.1,11.2)
+
+    \psframe(5.5,6.5)(9.9,8.4)
+    \psframe(10.6,6.5)(14.9,8.4)
+
+    \psframe(5.5,3.5)(9.7,5.4)
+
+    \psframe(5.5,0.2)(9.7,2.6)
+
+    \psline[linewidth=1pt,arrowscale=1.2]{->}(6,15.5)(6,14.2)
+    \psline[linewidth=1pt,arrowscale=1.2]{->}(11,15.5)(11,14.2)
+
+    \psline[linewidth=1pt,arrowscale=1.2]{->}(7.5,12.5)(7.5,11.2)
+
+    \psline[linewidth=1pt,arrowscale=1.2]{->}(7.5,9.5)(7.5,8.4)
+    \psline[linewidth=1pt,arrowscale=1.2]{->}(9.2,10.3)(10.6,10.3)
+
+    \psline[linewidth=1pt,arrowscale=1.2]{->}(7.5,6.5)(7.5,5.4)
+    \psline[linewidth=1pt,arrowscale=1.2]{->}(9.9,7.3)(10.6,7.3)
+    
+    \psline[linewidth=1pt,arrowscale=1.2]{->}(7.5,3.5)(7.5,2.6)
+
+
+    \psframe[framearc=0.6](0,15)(1,18)
+    \psframe[framearc=0.6](0,10.8)(1,13.2)
+    \psframe[framearc=0.6](0,5.2)(1,7.8)
+    \psframe[framearc=0.6](0,0.4)(1,2.7)
+
+    \rput{90}(0.5, 16.5){\bf Identification}
+    \rput{90}(0.5, 12){\bf Screening}
+    \rput{90}(0.5, 6.5){\bf Elegibility}
+    \rput{90}(0.5, 1.5){\bf Included}
+
+\end{pspicture}}
+\end{center}
+\end{document}
+
