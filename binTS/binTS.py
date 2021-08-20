@@ -24,7 +24,7 @@ def color(value, start, end):
     b = stage(value, bLow, bHigh)
     return f'#{r}{g}{b}'
     
-def gradient(data, r, a, start = '#99ccff', end = '#336600'): # cumulative series
+def gradient(data, r, a, start = '#00ffff', end = '#00cc00', curve = '#ff0000'): # cumulative series
     n = len(data)
     h = r * a
     c = canvas(n, h)
@@ -32,10 +32,17 @@ def gradient(data, r, a, start = '#99ccff', end = '#336600'): # cumulative serie
     x = 0
     maximum = sum(data)
     level = 0
+    yp = h
+    xp = 0
     for bit in data:
         level += bit
-        f = color(level / maximum, start, end)
+        pos = level / maximum
+        f = color(pos, start, end)
         d.rectangle([(x, 0), (x + r, h)], fill = f, outline = None, width = 0)
+        p = h - round(pos * h)
+        m = (2 * x + r) / 2
+        d.line([(xp, yp), (m, p)], fill = curve, width = 1)
+        xp, yp = m, p
         x += r
     return c
         
@@ -85,7 +92,7 @@ def demo():
         a = 3 # default height ratio
     # use True/False to keep this didactive
     p = [0.1, 0.5, 0.9]
-    w = [5, 3, 1]
+    w = [8, 2, 1]
     combo([random() < choices(p, weights = w, k = 1)[0] for i in range(n)], r, a) 
     
 if __name__ == "__main__":
