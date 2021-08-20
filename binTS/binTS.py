@@ -41,7 +41,8 @@ def gradient(data, r, a, start = '#00ffff', end = '#00cc00', curve = '#ff0000'):
         d.rectangle([(x, 0), (x + r, h)], fill = f, outline = None, width = 0)
         p = h - round(pos * h)
         m = (2 * x + r) / 2
-        d.line([(xp, yp), (m, p)], fill = curve, width = 1)
+        if curve is not None:
+            d.line([(xp, yp), (m, p)], fill = curve, width = 1)
         xp, yp = m, p
         x += r
     return c
@@ -63,7 +64,7 @@ def combo(data, r, a):
     m = int(floor(r / 2))    
     w = r * n + 2 * m
     h = 2 * (a * r) + 3 * m
-    c = Image.new('RGB', (w, h))
+    c = Image.new('RGBA', (w, h))
     c.paste(barcode(data, r, a) , (m, m))
     c.paste(gradient(data, r, a) , (m, (a * r)  + 2 * m))
     c.save('binTS.png')
