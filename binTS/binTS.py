@@ -6,7 +6,7 @@ from sys import argv
 def canvas(n, r):
     w = r * n
     h = r
-    return Image.new('RGB', (w, h))
+    return Image.new('RGBA', (w, h))
 
 def stage(x, low, high):
     span = high - low
