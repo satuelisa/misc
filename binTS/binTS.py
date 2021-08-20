@@ -92,9 +92,11 @@ def demo():
     if a < 1:
         a = 3 # default height ratio
     # use True/False to keep this didactive
-    p = [0.1, 0.5, 0.9]
-    w = [8, 2, 1]
-    combo([random() < choices(p, weights = w, k = 1)[0] for i in range(n)], r, a) 
+    p = [0.1, 0.5, 0.95]
+    w = [3, 2, 7]
+    v = [random() for i in range(n)]
+    t = choices(p, weights = w, k = n)
+    combo([value < threshold for (value, threshold) in zip(v, t)], r, a) 
     
 if __name__ == "__main__":
     demo()
