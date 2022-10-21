@@ -1,0 +1,43 @@
+<html>
+  <head>
+    <LINK rel="stylesheet" type="text/css" href="https://elisa.dyndns-web.com/teaching/elisa.teaching.css">
+    <title>Resultados de medio curso</title>
+  </head>
+  <body>
+    <div id="elementos">
+      <div id="navibar">
+	<p>
+	  <a href="https://elisa.dyndns-web.com/espanol.html">Schaeffer</a> /
+	  <a href="https://elisa.dyndns-web.com/teaching/espanol.html">Docencia</a> /
+	  <a href="https://elisa.dyndns-web.com/teaching/mat/discretas/">Matem&aacute;ticas discretas</a> /
+	  Resultados de medio curso
+	</p>
+      </div>
+      <div ID="contenido">
+    <h1>Resultados de medio curso</h1>
+    <p>Semestre: <select id="semester" onchange="semester()"></select></p>
+    <div id="listing"></div>
+    <p>
+      <canvas id="draw" width="1000" height="800"/>
+    </p>
+    <div id="debug"></div>
+    <p>
+      El largo total de cada eje corresponde a los puntos completos de
+      la pregunta correspondiente. No se incluyen posibles preguntas
+      de puntos extra.
+    </p>
+    <p style="line-height:2;color:#cccccc;background-color:#7b241c">&nbsp;M&iacute;nimo (0 %)</p>
+    <p style="line-height:2;color:#bbbbbb;background-color:#a04000">&nbsp;Primer cuartil (25 %)</p>
+    <p style="line-height:2;color:#666666;background-color:#f1c40f">&nbsp;Mediana (50 %)</p>
+    <p style="line-height:2;color:#bbbbbb;background-color:#1e8449">&nbsp;Tercer cuartil (75 %)</p>
+    <p style="line-height:2;color:#bbbbbb;background-color:#2471a3">&nbsp;M&aacute;ximo (100 %)</p>
+      </div>
+      <div id="pie">
+	Actualizado el 3 de octubre del 2018.
+	<br>
+	URL: https://elisa.dyndns-web.com/teaching/mat/discretas/resultados/visual.html
+      </div>
+    </div>
+  </body>
+  <script src="visualizador.js"></script>
+</html>
