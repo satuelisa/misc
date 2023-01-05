@@ -538,7 +538,7 @@ def generate(kind, lan):
         if lan == 0:
             questions.append(('¿Cuánto vale ${:s}_8$ en hexadecimal?'.format(n), options, n))
         else:
-            questions.append(('What is the hexadecimal representation of vale ${:s}_8$?'.format(n), options, n))
+            questions.append(('What is the hexadecimal representation of ${:s}_8$?'.format(n), options, n))
         num = randint(90, 180)
         base = randint(17, 25)
         corr = convertir(num, base)
