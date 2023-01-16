@@ -1,3 +1,5 @@
+# https://imagemagick.org/index.php
+# convert -delay 200 -size 800x800 -loop 0 snow_*png snow.gif
 import pygame
 from time import sleep
 from math import pi, sqrt, sin, cos
@@ -80,6 +82,7 @@ for i in range(maxiter):
     thickness = max(thickness // 2, 1)
     pygame.display.flip()
     print(f'Iteration {i}')
+    pygame.image.save(window, f'snow_{i}.png')
     sleep(0.4)
 ignore = input('Enter to close')
 
