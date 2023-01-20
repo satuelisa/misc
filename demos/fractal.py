@@ -3,6 +3,7 @@
 import pygame
 from time import sleep
 from math import pi, sqrt, sin, cos
+from random import random
 
 pygame.init()
 w = 1000
@@ -12,18 +13,28 @@ h = w // 2
 thickness = 20
 window = pygame.display.set_mode( [ w, w ] )
 
+def noise(magnitude = 0.01):
+    value = random() * magnitude
+    if random() < 0.5:
+        return 1 - value
+    return 1 + value
+
+def fuzz(point, factor = 0):
+    (x, y) = point
+    return (x * noise(factor), y * noise(factor))
+
 # connect a sequence of points into a sequence of line segments
-def segment(points):
+def segment(points, fuzziness = 0.01):
     lines = []
     first = points.pop(0)
     while len(points) > 0:
-        second = points.pop(0)
+        second = fuzz(points.pop(0), fuzziness if len(points) > 1 else 0)
         lines.append((first, second))
         first = second
     return lines
 
 # snowflake split: --- -> -^- 
-def split(line):
+def split(line, factor = 1):
     (sl, el) = line
     (xs, ys) = sl
     (xe, ye) = el
@@ -45,7 +56,7 @@ def split(line):
     px = (1 - t) * xm + t * xs
     py = (1 - t) * ym + t * ys
     points[2] = (px, py)
-    return segment(points)
+    return segment(points, factor)
 
 # origin in the middle, unit square
 def translate(p, h):
@@ -68,8 +79,11 @@ r = 1 / sqrt(3)
 points = [ ( r * cos(p * i + a), r * sin(p * i + a)) for p in range(3) ]
 points = [ translate(p, h) for p in points ]
 points.append(points[0]) # close the triangle
-lines = segment(points)
+lines = segment(points, 0)
 
+from sys import argv
+
+ff = 0.2 if 'noise' in argv else 0
 for i in range(maxiter):
     newlines = []
     window.fill((0, 0, 0))
@@ -79,7 +93,8 @@ for i in range(maxiter):
                          '#ffffff',
                          spos, epos,
                          width = thickness)
-        newlines += split(line)
+        newlines += split(line, ff)
+    ff /= 2
     lines = newlines
     thickness = max(thickness // 2, 1)
     pygame.display.flip()
