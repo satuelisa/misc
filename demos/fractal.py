@@ -5,13 +5,14 @@ from time import sleep
 from math import pi, sqrt, sin, cos
 
 pygame.init()
-w = 1200
+w = 1000
 maxiter = 7
 # origin in the middle
 h = w // 2
 thickness = 20
 window = pygame.display.set_mode( [ w, w ] )
 
+# connect a sequence of points into a sequence of line segments
 def segment(points):
     lines = []
     first = points.pop(0)
@@ -20,7 +21,8 @@ def segment(points):
         lines.append((first, second))
         first = second
     return lines
-    
+
+# snowflake split: --- -> -^- 
 def split(line):
     (sl, el) = line
     (xs, ys) = sl
@@ -65,7 +67,7 @@ r = 1 / sqrt(3)
 # starting triangle
 points = [ ( r * cos(p * i + a), r * sin(p * i + a)) for p in range(3) ]
 points = [ translate(p, h) for p in points ]
-points.append(points[0])
+points.append(points[0]) # close the triangle
 lines = segment(points)
 
 for i in range(maxiter):
@@ -83,7 +85,7 @@ for i in range(maxiter):
     pygame.display.flip()
     print(f'Iteration {i}')
     pygame.image.save(window, f'snow_{i}.png')
-    sleep(0.4)
+    sleep(1)
 ignore = input('Enter to close')
 
 pygame.quit()
