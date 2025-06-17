@@ -1,4 +1,3 @@
-
 import pandas as pd
 obs = pd.read_csv('obsolete.csv', sep=';')
 flag = set()
@@ -7,15 +6,164 @@ for i, r in obs.iterrows():
     if 'JAMAIS' in s[-1]: # last
         flag.add(s[0]) # first
 
-
-flag.add('OTHERS') # skip also this
-
+anon = False # enable for the text file analysis
+        
 from collections import defaultdict
-disciplines = defaultdict(set)
-people = dict()
+# ID,Nom,Prenom,Disc,Dept,Statut
+hr = pd.read_csv('disc.csv', sep='Montreal_', encoding = 'latin_1',
+                 header = None, skiprows = 1, engine = 'python')
+
+disciplines = set()
+people = defaultdict(set)
 adj = defaultdict(int)
 freq = defaultdict(int)
 
+for i, r in hr.iterrows():
+    parts = [ str(v) for v in r ]
+    fields = parts[0].split(',')
+    if len(fields) > 3:
+        d = fields[3]
+        s = parts[-1]
+        n = f'{fields[1]}, {fields[2]}'
+        disciplines.add(d)
+        people[n].add(d)
+    else:
+        print('too short', fields)
+
+for (person, dl) in people.items():
+    for d1 in dl:
+        freq[d1] += 1
+        for d2 in dl:
+            if d1 != d2:
+                al = f'{min(d1, d2)},{max(d1, d2)}'
+                adj[al] += 1
+
+apart = defaultdict(int)                        
+for (al, c) in adj.items():
+    if c > 0: 
+        e = al.split(',')
+        d1 = e[0]
+        d2 = e[-1]
+        for dl in people.values():
+            if d1 in dl and d2 not in dl:
+                apart[f'{d1},{d2}'] += 1
+            if d1 not in dl and d2 in dl:
+                apart[f'{d2},{d1}'] += 1                
+
+import networkx as nx
+
+skip = [ 'MAQUI', 'IC', 'DI', 'IG', 'Lx', 'Design', 'ilas' ]
+
+prune = True
+
+G = nx.Graph()
+for d in disciplines:
+    ignore = False
+    for s in skip:
+        if s in d:
+            ignore = True
+    if ignore:
+        continue
+    if 'i' in d.lower() or d == '420' : # I, IN, AI
+        if prune and d in flag:
+            continue
+        G.add_node(d)
+
+edges = set(apart.keys()) | set(adj.keys())
+
+ec = dict() # 1 = pull, -1 = push, 0 = neutral
+
+for e in edges:
+    al = e.split(',')
+    d1 = al[0]
+    d2 = al[-1]
+    if G.has_node(d1) and G.has_node(d2):
+        c = f'{d2},{d1}' # opposite direction edge
+        if e in apart and (e not in adj and c not in adj):
+            ec[e] = -1 # repulsion
+            ec[c] = -1 # repulsion        
+            G.add_edge(d1, d2, weight = apart[e])
+        elif e not in apart and (e in adj or c in adj):
+            ec[e] = 1 # attraction
+            ec[c] = 1 # attraction
+            G.add_edge(d1, d2, weight = adj[e])
+        elif e in apart and (e in adj or c in adj):
+            ec[e] = 0 # mixed
+            ec[c] = 0 # mixed
+            G.add_edge(d1, d2, weight = 1)
+        else:
+            print('# unclear', e)
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+plt.rcParams['figure.figsize'] = [ 32 , 16 ]
+
+i = 1
+for cc in nx.connected_components(G):
+    S = G.subgraph(cc)
+    W = [ S[u][v]['weight'] for u, v in S.edges() ]
+    V = S.nodes()
+
+    groups = nx.community.greedy_modularity_communities(S)
+    gid = 0
+    g = dict()
+    for group in groups:
+        for member in group:
+            g[member] = gid
+        gid += 1
+    palette = sns.color_palette('husl', len(groups))
+    
+    np = [ palette[g[v]] for v in V ]
+    ns = [ 100 if v in flag else 2000 for v in V ]
+    ep = []
+    for e in S.edges():
+        s, t = e
+        l = f'{s},{t}'
+        if ec[l] == -1:
+            ep.append('red')
+        elif ec[l] == 1:
+            ep.append('blue')
+        else:
+            ep.append('gray')
+    coords = nx.kamada_kawai_layout(S, scale = 3)
+    plt.clf()
+    nx.draw(S, width = W, pos = coords, node_size = ns,
+            nodelist = V, node_color = np, edge_color = ep,
+            font_size = 15, with_labels = True)
+            
+    plt.savefig(f'disc{i}.png')
+    i += 1
+
+    j = 0
+    for sub in groups: # divide clusters further
+        SG = S.subgraph(sub)
+        SV = SG.nodes()
+        sgroups = nx.community.greedy_modularity_communities(SG)
+        gid = 0
+        sg = dict()
+        for group in sgroups:
+            for member in group:
+                sg[member] = gid
+            gid += 1
+        palette = sns.color_palette('husl', len(sgroups))
+        np = [ palette[sg[v]] for v in SV ]
+        plt.clf()
+        cs = nx.kamada_kawai_layout(SG, scale = 3)        
+        nx.draw(SG, pos = cs, node_size = 2000,
+                nodelist = SV, node_color = np, edge_color = 'black',
+                font_size = 15, with_labels = True)
+        plt.savefig(f'disc{i}sub{j}.png')
+        j += 1
+                
+if not anon:
+    quit()
+
+disciplines = defaultdict(set)
+people = defaultdict(set)
+adj = defaultdict(int)
+freq = defaultdict(int)
+flag.add('OTHERS') # skip also this
 c = 0
 with open('disc.txt') as input:
     for line in input:
@@ -58,7 +206,6 @@ for pair in adj:
 
 safe -= mixed # clean up the mixed ones
 
-import networkx as nx
 G = nx.Graph()
 
 for pair in safe:
@@ -93,7 +240,6 @@ for g in groups:
         merge |= groups[g] # mark as safe to merge
 
 
-import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = [ 32 , 16 ]
 
 i = 1
