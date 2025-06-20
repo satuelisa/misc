@@ -1,14 +1,34 @@
 import pandas as pd
 obs = pd.read_csv('obsolete.csv', sep=';')
-flag = set()
+inactive = set()
+
+from collections import defaultdict
+courses = defaultdict(set)
+descr = dict()
+
+with open('descr.txt') as info:
+    for line in info:
+        line = line.strip()
+        fields = line.split('-')
+        code = fields[0]
+        d = fields[-1]
+        descr[code] = d
+
 for i, r in obs.iterrows():
-    s = [ str(v) for v in r ]
+    s = [ ' '.join(str(v).split()).replace('\\n', '') for v in r ]
+    do = s[0].upper() # the old code
+    dn = s[3].upper() # the new code
+    descr[do] = (f'{s[1]} : {s[2]}') # old name + EQP
+    descr[dn] = s[4].strip() # new name
     if 'JAMAIS' in s[-1]: # last
-        flag.add(s[0]) # first
+        inactive.add(dn) # new one never used
+    for c in s[-4:-1]:
+        if 'AS' in c:
+            courses[do].add(c)
+            courses[dn].add(c)            
 
 anon = False # enable for the text file analysis
         
-from collections import defaultdict
 # ID,Nom,Prenom,Disc,Dept,Statut
 hr = pd.read_csv('disc.csv', sep='Montreal_', encoding = 'latin_1',
                  header = None, skiprows = 1, engine = 'python')
@@ -17,19 +37,139 @@ disciplines = set()
 people = defaultdict(set)
 adj = defaultdict(int)
 freq = defaultdict(int)
+holders = defaultdict(set)
+
+# prefixes to ignore
+nontech = [ '300', 'LAB', 'TE', 'FG', 'G', '100', '410', '414',
+            'MV', 'II', 'PH', 'SC', 'T', 'HR', 'E', 'ST',
+            '500', 'IG', 'AL', 'DM', 'CM', 'E', 'IC', '571',
+            'MP', 'DG', '570', '5.70', 'MONTAG', 'DESIGN',
+            'MAQUI', 'LCILX', 'DI', 'ILAS', 'FPS', 'BI', '430' ]
 
 for i, r in hr.iterrows():
     parts = [ str(v) for v in r ]
     fields = parts[0].split(',')
     if len(fields) > 3:
-        d = fields[3]
+        d = fields[3].upper() # clean up random lowercase
+        omit = False
+        if '.' not in d: # analyse ONLY the new kind
+            continue
+        for skip in nontech:
+            if d.startswith(skip):
+                omit = True
+        if omit or d in inactive:
+            continue
         s = parts[-1]
         n = f'{fields[1]}, {fields[2]}'
         disciplines.add(d)
         people[n].add(d)
+        holders[d].add(n)
     else:
         print('too short', fields)
 
+def similarity(s1 ,s2):
+    shared = s1 & s2
+    joint = s1 | s2
+    return len(shared) / len(joint)
+
+import numpy as np
+from matplotlib import pyplot as plt
+from scipy.cluster.hierarchy import dendrogram, linkage
+from scipy.spatial.distance import squareform
+
+n = len(holders) # discipline count
+S = np.zeros((n, n))
+idx = [ d for d in holders.keys() ]
+for i in range(n):
+    di = idx[i]
+    for j in range(i + 1, n):
+        dj = idx[j]
+        s = 1 - similarity(holders[di], holders[dj]) # distance is the inverse of similarity
+        S[i, j] = s
+        S[j, i] = s
+
+C = squareform(S)
+# https://docs.scipy.org/doc/scipy/reference/generated/scipy.cluster.hierarchy.linkage.html#scipy.cluster.hierarchy.linkage
+H = linkage(y = C, method = 'ward', optimal_ordering = True) 
+
+fig = plt.figure(figsize = (24, 8))
+
+vis = dendrogram(H, orientation = 'top', leaf_rotation = 90, leaf_font_size = 12, labels = idx)
+plt.savefig('dendrogram.png')
+
+def accept(included, threshold = 8, small = 3):
+    if len(included) <= small: # always allow small merges
+        return True
+    total = 0
+    for d in included: # assess impact for larger merges
+        for p in holders[d]: # who holds these
+            current = people[p]
+            overlap = current & included
+            additions = included - current
+            opened = set()
+            for ad in additions: # what could they now gain
+                opened |= courses[d]
+            total += len(opened) # how many are there
+    return total <= threshold # is this an okay quantity
+
+groups = dict()
+for i in range(n):
+    groups[i] = { idx[i] }
+freeze = set()
+combo = n - 1
+for h in H:
+    sides = { int(h[0]), int(h[1]) }
+    combo += 1    
+    proposal = set() # create the new group
+    if len(sides & freeze) == 0: # nothing is frozen yet
+        for side in sides:
+            proposal |= groups[side] # add the side to the group
+        if accept(proposal):
+            groups[combo] = proposal
+            for side in sides:
+                del groups[side] # this group no longer exists alone
+        else:
+            freeze |= sides # merger denied
+            freeze.add(combo) # no further merging can happen
+    else:
+        freeze.add(combo) # components already frozen
+
+for g, included in groups.items():
+    if len(included) < 2:
+        continue # singleton
+    print('Proposed merger:')
+    for d in included:
+        print(d, descr.get(d, '(pas de info)'))
+
+    gains = False
+    for d in included:
+        for p in holders[d]: # who holds these
+            current = people[p]
+            overlap = current & included
+            additions = included - current
+            opened = set()
+            for ad in additions: # what could they now gain
+                opened |= courses[d]
+            if len(opened) > 0:
+              print(f'{p} would gain {" ".join(opened)}')
+              gains = True
+
+    if not gains:
+        print('No change based on the analyzed data')
+              
+    print('\n')
+              
+    
+#from sklearn.cluster import AgglomerativeClustering
+#model = AgglomerativeClustering(metric = 'precomputed', distance_threshold = 0, n_clusters = None, linkage = 'average')
+#results = model.fit_predict(S)        
+#print(results)    
+
+
+
+                       
+quit() # until here is fine for the hierarchical clustering to run
+                       
 for (person, dl) in people.items():
     for d1 in dl:
         freq[d1] += 1
@@ -37,7 +177,7 @@ for (person, dl) in people.items():
             if d1 != d2:
                 al = f'{min(d1, d2)},{max(d1, d2)}'
                 adj[al] += 1
-
+                
 apart = defaultdict(int)                        
 for (al, c) in adj.items():
     if c > 0: 
@@ -50,10 +190,8 @@ for (al, c) in adj.items():
             if d1 not in dl and d2 in dl:
                 apart[f'{d2},{d1}'] += 1                
 
-import networkx as nx
 
 skip = [ 'MAQUI', 'IC', 'DI', 'IG', 'Lx', 'Design', 'ilas' ]
-
 prune = True
 
 G = nx.Graph()
@@ -65,7 +203,7 @@ for d in disciplines:
     if ignore:
         continue
     if 'i' in d.lower() or d == '420' : # I, IN, AI
-        if prune and d in flag:
+        if prune and d in inactive:
             continue
         G.add_node(d)
 
@@ -115,7 +253,7 @@ for cc in nx.connected_components(G):
     palette = sns.color_palette('husl', len(groups))
     
     np = [ palette[g[v]] for v in V ]
-    ns = [ 100 if v in flag else 2000 for v in V ]
+    ns = [ 100 if v in inactive else 2000 for v in V ]
     ep = []
     for e in S.edges():
         s, t = e
@@ -163,7 +301,7 @@ disciplines = defaultdict(set)
 people = defaultdict(set)
 adj = defaultdict(int)
 freq = defaultdict(int)
-flag.add('OTHERS') # skip also this
+inactive.add('OTHERS') # skip also this
 c = 0
 with open('disc.txt') as input:
     for line in input:
@@ -174,11 +312,11 @@ with open('disc.txt') as input:
         people[label] = held
         for d1 in held:
             freq[d1] += 1
-            if d1 in flag:
+            if d1 in inactive:
                 continue
             disciplines[d1].add(label)
             for d2 in held:
-                if d2 in flag:
+                if d2 in inactive:
                     continue
                 if d1 != d2: # count co-occurrences of discipline pairs
                     adj[f'{d1},{d2}'] += 1
